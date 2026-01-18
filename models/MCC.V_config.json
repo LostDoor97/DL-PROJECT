@@ -1,0 +1,25 @@
+{
+    "ticker": "MCC.V",
+    "hyperparameters": {
+        "ticker": "MCC.V",
+        "unrollings": 50,
+        "batch_size": 32,
+        "epochs": 30,
+        "learning_rate": 0.001,
+        "validation_split": 0.1,
+        "model_type": "LSTM",
+        "lstm_units_1": 64,
+        "lstm_units_2": 64,
+        "dense_units": 32,
+        "dropout_rate": 0.5
+    },
+    "metrics": {
+        "loss": 0.001192408730275929,
+        "mae": 0.02509189024567604,
+        "mse": 0.001192408730275929,
+        "rmse": 0.034531271773219255,
+        "direction_accuracy": 48.9051094890511
+    },
+    "model_path": "C:\\Users\\AdminFix\\Documents\\DL\\models\\MCC.V_lstm_20260118_160531.h5",
+    "run_id": "111b05b11cbc4038bd1f88483aed1cc1"
+}

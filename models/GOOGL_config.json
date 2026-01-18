@@ -1,0 +1,25 @@
+{
+    "ticker": "GOOGL",
+    "hyperparameters": {
+        "ticker": "GOOGL",
+        "unrollings": 50,
+        "batch_size": 32,
+        "epochs": 30,
+        "learning_rate": 0.001,
+        "validation_split": 0.1,
+        "model_type": "LSTM",
+        "lstm_units_1": 64,
+        "lstm_units_2": 64,
+        "dense_units": 32,
+        "dropout_rate": 0.5
+    },
+    "metrics": {
+        "loss": 0.0018853312358260155,
+        "mae": 0.035282716155052185,
+        "mse": 0.0018853312358260155,
+        "rmse": 0.043420401147686506,
+        "direction_accuracy": 49.01960784313725
+    },
+    "model_path": "C:\\Users\\AdminFix\\Documents\\DL\\models\\GOOGL_lstm_20260117_225158.h5",
+    "run_id": "43ce4031ea0641e5b92ea5cb145a9ab8"
+}

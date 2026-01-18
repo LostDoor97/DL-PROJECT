@@ -1,0 +1,187 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  lint-and-test:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install flake8 pytest pytest-cov
+    
+    - name: Lint with flake8
+      run: |
+        # Stop build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      continue-on-error: true
+    
+    - name: Create required directories
+      run: |
+        mkdir -p data/raw data/processed models logs mlruns evidently_reports
+    
+    - name: Test imports
+      run: |
+        python -c "import config; print('Config loaded successfully')"
+        python -c "import data_pipeline; print('Data pipeline loaded successfully')"
+        python -c "import model; print('Model loaded successfully')"
+
+  train-model:
+    name: Train Model
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Create directories
+      run: |
+        mkdir -p data/raw data/processed models logs mlruns evidently_reports
+    
+    - name: Train LSTM model
+      run: |
+        python train.py
+      timeout-minutes: 30
+      continue-on-error: true
+    
+    - name: Upload model artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: trained-models
+        path: |
+          models/*.h5
+          models/*.json
+          mlruns/
+        retention-days: 7
+
+  build-docker:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Log in to Docker Hub (optional)
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+      continue-on-error: true
+    
+    - name: Build Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: false
+        tags: stock-prediction:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Test Docker image
+      run: |
+        docker images
+        docker run --rm stock-prediction:latest python -c "import tensorflow; print('TensorFlow version:', tensorflow.__version__)"
+
+  generate-reports:
+    name: Generate Drift Reports
+    runs-on: ubuntu-latest
+    needs: train-model
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Download model artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: trained-models
+      continue-on-error: true
+    
+    - name: Generate drift reports
+      run: |
+        mkdir -p evidently_reports
+        python drift_monitor.py
+      continue-on-error: true
+    
+    - name: Upload drift reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: drift-reports
+        path: evidently_reports/*.html
+        retention-days: 30
+
+  deploy:
+    name: Deploy (Manual Trigger)
+    runs-on: ubuntu-latest
+    needs: [build-docker, train-model]
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy notification
+      run: |
+        echo "Deployment would happen here"
+        echo "Push Docker image to registry"
+        echo "Deploy to production environment"

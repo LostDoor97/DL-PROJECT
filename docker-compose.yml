@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # FastAPI Prediction Service
+  api:
+    build: .
+    container_name: stock-prediction-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./mlruns:/app/mlruns
+      - ./logs:/app/logs
+    environment:
+      - MLFLOW_TRACKING_URI=file:./mlruns
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+    command: python app.py
+    networks:
+      - stock-network
+    restart: unless-stopped
+
+  # Streamlit Dashboard
+  dashboard:
+    build: .
+    container_name: stock-prediction-dashboard
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./mlruns:/app/mlruns
+      - ./evidently_reports:/app/evidently_reports
+    environment:
+      - MLFLOW_TRACKING_URI=file:./mlruns
+    command: streamlit run streamlit_app.py --server.port=8501 --server.address=0.0.0.0
+    networks:
+      - stock-network
+    restart: unless-stopped
+    depends_on:
+      - api
+
+  # MLflow Tracking Server
+  mlflow:
+    build: .
+    container_name: mlflow-server
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/app/mlruns
+    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri file:./mlruns --default-artifact-root ./mlruns
+    networks:
+      - stock-network
+    restart: unless-stopped
+
+networks:
+  stock-network:
+    driver: bridge
+
+volumes:
+  data:
+  models:
+  mlruns:
+  logs:
+  evidently_reports:

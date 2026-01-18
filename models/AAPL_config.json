@@ -1,0 +1,25 @@
+{
+    "ticker": "AAPL",
+    "hyperparameters": {
+        "ticker": "AAPL",
+        "unrollings": 50,
+        "batch_size": 32,
+        "epochs": 30,
+        "learning_rate": 0.001,
+        "validation_split": 0.1,
+        "model_type": "LSTM",
+        "lstm_units_1": 64,
+        "lstm_units_2": 64,
+        "dense_units": 32,
+        "dropout_rate": 0.5
+    },
+    "metrics": {
+        "loss": 0.004876858554780483,
+        "mae": 0.058477796614170074,
+        "mse": 0.004876858554780483,
+        "rmse": 0.0698345083377873,
+        "direction_accuracy": 54.90196078431373
+    },
+    "model_path": "C:\\Users\\AdminFix\\Documents\\DL\\models\\AAPL_lstm_20260117_225254.h5",
+    "run_id": "3d96d9bc77524e79aab793b510436f02"
+}
