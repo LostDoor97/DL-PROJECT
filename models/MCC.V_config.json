@@ -4,7 +4,7 @@
         "ticker": "MCC.V",
         "unrollings": 50,
         "batch_size": 32,
-        "epochs": 30,
+        "epochs": 50,
         "learning_rate": 0.001,
         "validation_split": 0.1,
         "model_type": "LSTM",
@@ -14,12 +14,12 @@
         "dropout_rate": 0.5
     },
     "metrics": {
-        "loss": 0.001192408730275929,
-        "mae": 0.02509189024567604,
-        "mse": 0.001192408730275929,
-        "rmse": 0.034531271773219255,
-        "direction_accuracy": 48.9051094890511
+        "loss": 0.0013672845670953393,
+        "mae": 0.02672252245247364,
+        "mse": 0.0013672845670953393,
+        "rmse": 0.036976811207773706,
+        "direction_accuracy": 49.63503649635037
     },
-    "model_path": "C:\\Users\\AdminFix\\Documents\\DL\\models\\MCC.V_lstm_20260118_160531.h5",
-    "run_id": "111b05b11cbc4038bd1f88483aed1cc1"
+    "model_path": "C:\\Users\\AdminFix\\Documents\\DL\\models\\MCC.V_lstm_20260118_230936.h5",
+    "run_id": "eafe78a1ad564303a44450926e203f45"
 }
